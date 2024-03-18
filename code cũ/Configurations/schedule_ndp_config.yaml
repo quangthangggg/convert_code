@@ -1,0 +1,15 @@
+Schedule:
+       description: "NewDataPipeline(NDP) Scheduled on Data Update in Raw Path"
+       pipeline_parameters: {
+        # Specify model version to use for NDP from the trained model using MTP pipeline. 
+        # To use latest model trained, use model_version_ndp = -1
+        "model_version_ndp" : -1,
+        # If latest_data_ndp flag is True, observation_year & observation_month_number will be ignored 
+        # as it will fetch the latest month data from the input directory.
+        "latest_data_ndp" : True,
+        # To run NDP pipeline on specific observation_year & observation_month_number, set latest_data_ndp -> False
+        "observation_year": 2022,
+        "observation_month_number" : 8,
+        # Number of months to create historical features from.
+        "historical_months" : 6,
+      }
