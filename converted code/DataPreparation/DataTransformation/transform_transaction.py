@@ -4,13 +4,15 @@ import datetime as dt
 import time
 import argparse
 import os
+import sys
 from azureml.core import Run
 import utilities as ut
 
 # %%
 # Notebook specific imports
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col, year, month, lit, to_date, countDistinct
+from pyspark.sql import SparkSession, DataFrame, Window
+from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col, year, month, lit, to_date, countDistinct, last
 from pyspark.sql.functions import  sum as pyspark_sum
 from joblib import Parallel, delayed
 import multiprocessing as mp
@@ -112,12 +114,12 @@ def fun_impute_missing_cusid(df_cust: DataFrame, args_lst: list):
     df_cust = df_cust.orderBy('YEAR', 'MONTH')
 
     # For PRE_CLS_BAL & CCY columns we will populate the previous values in dummy month rows
-    df_cust = df_cust.withColumn('PRE_CLS_BAL', F.last('PRE_CLS_BAL', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
-    #df_cust = df_cust.withColumn('CCY', F.last('CCY', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
+    df_cust = df_cust.withColumn('PRE_CLS_BAL', last('PRE_CLS_BAL', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
+    #df_cust = df_cust.withColumn('CCY', last('CCY', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
 
     # Making cid_not_exist_flag = 1, where the customer does not exist with the bank
-    df_cust = df_cust.withColumn('cid_not_exist_flag', F.last('new_customer_flag', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
-    df_cust = df_cust.withColumn('cid_not_exist_flag', F.last('cid_not_exist_flag', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(0, sys.maxsize)))
+    df_cust = df_cust.withColumn('cid_not_exist_flag', last('new_customer_flag', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(-sys.maxsize, 0)))
+    df_cust = df_cust.withColumn('cid_not_exist_flag', last('cid_not_exist_flag', True).over(Window.partitionBy('HASHED_CIF').orderBy('YEAR', 'MONTH').rowsBetween(0, sys.maxsize)))
     
     # Remove rows where customer did not exist
     df_cust = df_cust.filter(~((col('cid_not_exist_flag') == 1) & (col('new_customer_flag') == 0)))
