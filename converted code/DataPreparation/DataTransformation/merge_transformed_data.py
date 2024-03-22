@@ -5,7 +5,7 @@ import time
 import argparse
 import os
 
-from pyspark.sql import SparkSession, Window
+from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, regexp_replace
 
 from azureml.core import Run

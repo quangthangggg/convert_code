@@ -9,7 +9,7 @@ import datetime as dt
 import time
 import argparse
 import os
-from pyspark.sql import SparkSession, DataFrame, Window
+from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from azureml.core import Run
 import utilities as ut
