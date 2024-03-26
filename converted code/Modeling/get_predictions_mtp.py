@@ -4,8 +4,8 @@ import argparse
 import os
 from azureml.core import Run
 import h2o
-from h2o.automl import H2OAutoML
-from pysparkling import H2OContext
+from pysparkling.ml import H2OAutoML
+from ai.h2o.sparkling import H2OContext
 from pyspark.sql import SparkSession
 # import pandas as pd
 import utilities as ut 
@@ -57,7 +57,7 @@ runs = experiment.get_runs()
 current_run = next(runs)
 
 # Khởi tạo H2O Context
-h2o_context = H2OContext.getOrCreate(spark)
+h2o_context = H2OContext.getOrCreate()
 
 # Chuyển đổi dữ liệu pandas thành H2OFrame
 tbl_train_h2o = h2o_context.asH2OFrame(tbl_train)

@@ -4,14 +4,15 @@ import datetime as dt
 import time
 import argparse
 import os
-# from azureml.core import Run
+from azureml.core import Run
 import utilities as ut
 
 # %%
 # Notebook specific imports
 from pyspark.sql import SparkSession
-from pysparkling import *
-from h2o.estimators import H2OIsolationForestEstimator
+# from pysparkling import *
+from pyspark.sql.functions import col
+from pysparkling.ml import H2OIsolationForest
 from h2o import H2OContext
 import numpy as np
 from pathlib import Path
@@ -63,25 +64,27 @@ def fun_outlier_treatment(df, ignore_features, njobs, threshold):
     '''ADD FUNCTION DEFINITION'''
     spark = SparkSession.builder.getOrCreate()
     # Create H2O context
-    hc = H2OContext.getOrCreate(spark)
+    hc = H2OContext.getOrCreate()
 
     # Define feature columns
-    feature_cols = [col for col in df.columns if col not in ignore_features]
+    selected_cols = [col for col in df.columns if col not in ignore_features]
 
+    # Chọn các cột được quan tâm
+    df_selected = df.select(*selected_cols)
     # Convert Spark DataFrame to H2OFrame
-    h2o_df = hc.as_h2o_frame(df, "h2o_df")
+    h2o_df = hc.asH2OFrame(df)
 
     # Define and Fit Model
-    model = H2OIsolationForestEstimator(ntrees=100, contamination=float(threshold),
+    model = H2OIsolationForest(ntrees=100, contamination=float(threshold),
                                         seed=42, ignored_columns=ignore_features)
-    model.train(x=feature_cols, training_frame=h2o_df)
+    model.fit(h2o_df)
 
     # Predict outliers
     predictions = model.predict(h2o_df)
     outliers = predictions[predictions["predict"] == "1"]
 
     # Convert H2OFrame to Spark DataFrame
-    df_remove_anomaly = hc.as_spark_frame(outliers)
+    df_remove_anomaly = hc.asSparkFrame(outliers)
 
     return df_remove_anomaly
 

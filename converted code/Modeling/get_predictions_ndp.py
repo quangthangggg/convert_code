@@ -12,8 +12,8 @@ import utilities as ut
 # from azureml.pipeline.core import PipelineRun
 # from azureml.train.automl.run import AutoMLRun
 import h2o
-from h2o.automl import H2OAutoML
-from pysparkling import H2OContext
+from pysparkling.ml import H2OAutoML
+from ai.h2o.sparkling import H2OContext
 from pyspark.sql import SparkSession
 import joblib
 from sklearn.metrics import confusion_matrix
@@ -59,7 +59,7 @@ print(f"model_name : {args.model_name}")
 # print(f"model_path: {args.model_path}")
 
 # ..in order to be able to retrieve a model from the repository..
-h2o_context = H2OContext.getOrCreate(spark)
+h2o_context = H2OContext.getOrCreate()
 
 # Load model from local file system or other storage
 pickled_model_path = "/path/to/your/model.pkl" #Fill path here
